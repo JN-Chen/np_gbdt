@@ -1,9 +1,11 @@
 import numpy as np
 class DTree:
-    def __init__(self, data, target, depth):
+    def __init__(self, data, target, feat_id, depth):
         self.data = data
         self.target = target
         self.depth = depth
+        self.feat_id = feat_id
+        self.min_feat_idx = -1
         self.rnext = None
         self.lnext = None
         self.leaf = 0
@@ -47,7 +49,8 @@ class DTree:
         Entropys = np.array(list(map(self.map_first_element, En_data)))
         min_idx = np.argmin(Entropys)
         min_idx = np.array(min_idx).min()
-        self.feature_id = min_idx
+        self.feature_id = self.feat_id[min_idx]
+        self.min_feat_idx = min_idx
         left_idx = En_data[min_idx][1]
         right_idx = En_data[min_idx][2]
         return left_idx, right_idx
@@ -58,12 +61,15 @@ class DTree:
             #print("leafnode output=%f" % self.output)
             return
         left_idx, right_idx = self.splite_data()
-        drop_feature_data = np.delete(np.array(self.data), self.feature_id, axis = 0)
+        drop_feature_data = np.delete(np.array(self.data), self.min_feat_idx, axis = 0)
+        drop_feature_ids = np.delete(np.array(self.feat_id), self.min_feat_idx)
+        #print("drop feat id = %d" % self.feat_id[self.min_feat_idx])
+        #print(drop_feature_ids.shape)
         if(len(left_idx) > 0):
-            self.lnext = DTree(drop_feature_data[:,left_idx], self.target[left_idx], self.depth - 1)
+            self.lnext = DTree(drop_feature_data[:,left_idx], self.target[left_idx], drop_feature_ids, self.depth - 1)
             self.lnext.construct()
         if(len(right_idx) > 0):
-            self.rnext = DTree(drop_feature_data[:,right_idx], self.target[right_idx], self.depth - 1)
+            self.rnext = DTree(drop_feature_data[:,right_idx], self.target[right_idx], drop_feature_ids, self.depth - 1)
             self.rnext.construct()
 
     def get_output(self, data, ids, output):
@@ -71,6 +77,7 @@ class DTree:
             output[ids] = self.output
             return
         feature = data[self.feature_id, :]
+        #print("get feat id = %d" % self.feature_id)
         idx_left = np.argwhere(feature < self.splite_point).flatten()
         idx_right = np.argwhere(feature >= self.splite_point).flatten()
         drop_feature_data = np.delete(data, self.feature_id, axis = 0)

@@ -1,10 +1,13 @@
 import pandas as pd
 import numpy as np
+import time
 
 def normal_change(arr):
     return arr
+def log_change(arr):
+    return np.log(arr)
 class DataSet:
-    def __init__(self, filename, index_col = 'ID', valid_rate = 0.2, data_trans = normal_change):
+    def __init__(self, filename, index_col = 'ID', valid_rate = 0.2, data_trans = log_change):
         self.train_df = self.drop_feature(filename, index_col)
         self.train_df, self.target_df = self.splite_train_df(self.train_df, valid_rate)
         self.valid_rate = valid_rate
@@ -29,9 +32,13 @@ class DataSet:
     def get_all_sample(self):
         self.splite_train_valid()
         return self.data_trans(self.train_df.values), \
-        self.data_trans(self.target_df.values), np.array([i for i in range(len(self.target_df.values))])
+        self.data_trans(self.target_df.values), \
+        np.array([i for i in range(len(self.target_df.values))]), \
+        np.array([i for i in range(len(self.target_df.values.T))])
     def get_total_count(self):
         return len(self.target_df.values)
+    def get_total_feature(self):
+        return len(self.target_df.values.T)
         
     def splite_train_valid(self):
         ids = np.array([i for i in range(len(self.target_df.values))])
@@ -40,19 +47,27 @@ class DataSet:
         self.train_ids = ids[:splite_len]
         self.valid_ids = ids[splite_len:]
 
-    def get_train_sample(self, data, target, count = 0):
+    def get_train_sample(self, data, target, sample = 0, feat = 0):
+        #print(int(time.time()))
+        np.random.seed(int(time.time()))
         np.random.shuffle(self.train_ids)
-        if(count != 0):
-            train_id = self.train_ids[:count]
+        if(sample != 0):
+            train_id = self.train_ids[:sample]
         else:
             train_id = self.train_ids[:]
-        rand_train_data = data[train_id, :]
+        feature_ids = np.array([i for i in range(len(self.target_df.values.T))])
+        np.random.shuffle(feature_ids)
+        if(feat == 0):
+            feat_id = feature_ids[:]
+        else:
+            feat_id = feature_ids[:feat]
+        rand_train_data = data[train_id, :].T[feat_id, :].T
         rand_train_target = target[train_id]
-        return rand_train_data, rand_train_target, train_id
-    def get_valid_sample(self, data, target, count = 0):
+        return rand_train_data, rand_train_target, train_id, feat_id
+    def get_valid_sample(self, data, target, sample = 0):
         np.random.shuffle(self.valid_ids)
-        if(count != 0):
-            valid_ids = self.valid_ids[:count]
+        if(sample != 0):
+            valid_ids = self.valid_ids[:sample]
         else:
             valid_ids = self.valid_ids[:]
         rand_valid_data = data[valid_ids, :]
