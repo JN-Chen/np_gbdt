@@ -6,10 +6,11 @@ def normal_change(arr):
     return arr
 def log_change(arr):
     return np.log(arr)
+
 class DataSet:
-    def __init__(self, filename, index_col = 'ID', valid_rate = 0.2, data_trans = log_change):
+    def __init__(self, filename, index_col = 'ID', target_col = 'target', valid_rate = 0.2, data_trans = normal_change):
         self.train_df = self.drop_feature(filename, index_col)
-        self.train_df, self.target_df = self.splite_train_df(self.train_df, valid_rate)
+        self.train_df, self.target_df = self.splite_train_df(self.train_df, valid_rate, target_col)
         self.valid_rate = valid_rate
         self.train_ids = None
         self.valid_ids = None
@@ -23,11 +24,10 @@ class DataSet:
         constant_cols = list(constant_df['col_name'].values)
         train_df.drop(constant_cols, axis=1, inplace=True)#drop useless feature.
         train_df = train_df.T.drop_duplicates().T#drop_duplicates feature.
-        #print(train_df)
         return train_df
-    def splite_train_df(self, train_df, valid_rate):
-        target_df = train_df['target']
-        train_df.drop('target', axis=1, inplace=True)
+    def splite_train_df(self, train_df, valid_rate, target_col):
+        target_df = train_df[target_col]
+        train_df.drop(target_col, axis=1, inplace=True)
         return train_df, target_df
     def get_all_sample(self):
         self.splite_train_valid()
@@ -61,6 +61,10 @@ class DataSet:
             feat_id = feature_ids[:]
         else:
             feat_id = feature_ids[:feat]
+        print(data.shape)
+        print(train_id)
+        print(feat_id)
+        #asdsadsa
         rand_train_data = data[train_id, :].T[feat_id, :].T
         rand_train_target = target[train_id]
         return rand_train_data, rand_train_target, train_id, feat_id
