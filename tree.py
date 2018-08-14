@@ -61,6 +61,9 @@ class DTree:
         return ele[0]
     def splite_data(self):
         En_data = list(map(self.splite_feature, self.data))
+        #print("cccccccc")
+        #print(self.data)
+        #print(En_data)
         Entropys = np.array(list(map(self.map_first_element, En_data)))
         min_idx = np.argmin(Entropys)
         min_idx = np.array(min_idx).min()
@@ -78,7 +81,7 @@ class DTree:
         #print('done###########')
         return left_idx, right_idx
     def construct(self):
-        if (self.depth <= 0):#leaf node, return mean of target.
+        if (self.depth <= 0 or len(self.data) == 1):#leaf node, return mean of target.
             self.leaf = 1
             self.output = self.target.mean()
             self.clear_mem()
@@ -88,7 +91,7 @@ class DTree:
         drop_feature_data = np.delete(np.array(self.data), self.min_feat_idx, axis = 0)
         drop_feature_ids = np.delete(np.array(self.feat_id), self.min_feat_idx)
         #print("drop feat id = %d" % self.feat_id[self.min_feat_idx])
-        #print(drop_feature_ids)
+        #print(drop_feature_data)
         if(len(left_idx) > 0):
             self.lnext = DTree(drop_feature_data[:,left_idx], self.target[left_idx], drop_feature_ids, self.depth - 1)
             self.lnext.construct()

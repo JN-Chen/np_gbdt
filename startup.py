@@ -11,5 +11,5 @@ if __name__ == '__main__':
     dateset = DataSet(data_file, index_col = 'Id', target_col = 'SalePrice')
     dateset.correct_na()
     dateset.feature_transfer()
-    gbdt = GBDT(2000, 0.1, 0.1, 0.1)
+    gbdt = GBDT(10000, 0.2, 0.5, 20, learn_rate = 0.1)
     gbdt.fit(dateset)
