@@ -26,8 +26,8 @@ class GBDT:
         data_x, data_y, sample_id, feature_id = dataset.get_all_sample()#get total samples
         total_data_count = dataset.get_total_count()
         total_fea_count = dataset.get_total_feature()
-        Fm = [0 for i in range(total_data_count)]#record Fmֵ, m=0,1,2,3,4,5......max_iter
-        predict = np.array([0 for i in range(total_data_count)])#get predict buffer
+        Fm = [0. for i in range(total_data_count)]#record Fmֵ, m=0,1,2,3,4,5......max_iter
+        predict = np.array([0. for i in range(total_data_count)])#get predict buffer
         sample_count = int(total_data_count*self.sample_rate)
         feature_count = int(total_fea_count*self.feature_rate)
         valid_data, valid_target, valid_id = dataset.get_valid_sample(data_x, data_y)

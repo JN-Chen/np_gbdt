@@ -35,9 +35,7 @@ class FeatTrans():
     def find(self, name):
         return name in self.dic
     def transfer(self, df):
-        for v in self.dic:
-            #print(v)
-            df[df == v] = self.get(v)
+        df = df.map(self.dic)
         return df
 
 
@@ -52,13 +50,13 @@ class DataTransfer(DataBase):
 
     def transfer_map(self, feature):
         value = self.data_df[feature].values[0]
-        featrans = FeatTrans(feature)
         if(isinstance(value, (int, float)) == False):
+            featrans = FeatTrans(feature)
             for value in self.data_df[feature].values:
                 if(featrans.find(value) == False):
                     featrans.set(value)
-        self.FeatTransArray.append(featrans)
-        self.data_df[feature] = featrans.transfer(self.data_df[feature])
+            self.FeatTransArray.append(featrans)
+            self.data_df[feature] = featrans.transfer(self.data_df[feature])
         return feature
 
     def fill_na_map(self, na_feature):
@@ -68,7 +66,7 @@ class DataTransfer(DataBase):
 
     def get_na_count(self):
         return np.sum(self.data_df.isnull().sum().values)#left feature with na in the value will be fixed
-    def correct_na(self, drop_threshold = 0.5):#drop feature with na > drop_threshold and fill else na
+    def correct_na(self, drop_threshold = 0.2):#drop feature with na > drop_threshold and fill else na
         drop_idx = self.na_detect(drop_threshold)
         na_count = self.get_na_count()
         print("na count=%d" % na_count)

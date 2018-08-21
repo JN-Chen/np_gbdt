@@ -21,8 +21,6 @@ class DTree:
     def splite_feature(self, feature):
         min_E = -1
         splite_points = set(feature[:])
-        left_idx = []
-        right_idx = []
         d1 = 0
         d2 = 0
         for s_point in splite_points:#iterate for all splite points.
@@ -47,16 +45,12 @@ class DTree:
             e = np.sqrt(np.square(d1).sum()) + np.sqrt(np.square(d2).sum())
             if(min_E == -1):
                 min_E = e
-                left_idx = idx_left[:]
-                right_idx = idx_right[:]
             elif(e < min_E):
                 #self.splite_point = s_point
                 #self.feature_id = iter
-                left_idx = idx_left[:]
-                right_idx = idx_right[:]
                 min_E = e
             #print(e)
-        return min_E, left_idx, right_idx, s_point
+        return min_E,  s_point
     def map_first_element(self, ele):
         return ele[0]
     def splite_data(self):
@@ -69,9 +63,7 @@ class DTree:
         min_idx = np.array(min_idx).min()
         self.feature_id = self.feat_id[min_idx]
         self.min_feat_idx = min_idx
-        left_idx = En_data[min_idx][1]
-        right_idx = En_data[min_idx][2]
-        self.splite_point = En_data[min_idx][3]
+        self.splite_point = En_data[min_idx][1]
         #print(self.data[min_idx])
         #print(En_data)
         #print('min e = %f' % Entropys[min_idx])
@@ -79,6 +71,8 @@ class DTree:
         #print(right_idx)
         #print(self.splite_point)
         #print('done###########')
+        left_idx = np.argwhere(self.data[min_idx] < self.splite_point).flatten()
+        right_idx = np.argwhere(self.data[min_idx] >= self.splite_point).flatten()
         return left_idx, right_idx
     def construct(self):
         if (self.depth <= 0 or len(self.data) == 1):#leaf node, return mean of target.
