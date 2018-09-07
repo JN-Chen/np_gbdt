@@ -12,25 +12,16 @@ class GBDT:
         self.steps = []
     def update_res(self, target_y, F):
         return np.array(target_y) - np.array(F)
-    def caculate_step(self, train_predict, train_target, rsme):
-        '''term1 = np.multiply(train_predict, train_target)
-        term2 = np.square(train_predict)'''
-        if(rsme >= 0.8):
-            return 0.05
-        else:
-            return 0.005
-        #return term1.sum()/(term2.sum() + 0.001)
-        #return 0.05
-    #def predict(self, )
+
     def fit(self, dataset):
-        data_x, data_y, sample_id, feature_id = dataset.get_all_sample()#get total samples
+        data_x, data_y, sample_id, _ = dataset.get_all_sample()#get total samples
         total_data_count = dataset.get_total_count()
-        total_fea_count = dataset.get_total_feature()
+        total_fea_count = dataset.get_feature_count()
         Fm = [0. for i in range(total_data_count)]#record Fmֵ, m=0,1,2,3,4,5......max_iter
         predict = np.array([0. for i in range(total_data_count)])#get predict buffer
         sample_count = int(total_data_count*self.sample_rate)
         feature_count = int(total_fea_count*self.feature_rate)
-        valid_data, valid_target, valid_id = dataset.get_valid_sample(data_x, data_y)
+        _, valid_target, valid_id = dataset.get_valid_sample(data_x, data_y)
         #print(valid_data)
         valid_rsme = 10.
         for iter in range(self.max_iter):
@@ -53,9 +44,10 @@ class GBDT:
             valid_res = valid_target - valid_output
             valid_rsme = np.sqrt(np.square(valid_res).mean())
             #print("%f:%f" % (train_id.mean(), feat_id.mean()))
-            print("step %d train rsme=%f valid rsme = %f res = %f:%f" % (iter, train_rsme, valid_rsme, train_res.mean(), train_res.var()))
-            mean = valid_res.mean()
-            err_idx = np.argwhere(valid_res > 0.5).flatten()
+            print("step %d train rsme=%f valid rsme = %f" % (iter, train_rsme, valid_rsme))
+            #_ = valid_res.mean()
+            #err_idx = np.argwhere(valid_res > 0.1).flatten()
+            #err_res = res[valid_id[err_idx]]
             #print(valid_id[err_idx])
-            #print('valid len %d err len %d' %(len(valid_id), len(err_idx)))
+            #print('valid len %d err len %d err res mean %f' %(len(valid_id), len(err_idx), err_res.mean()))
             #break
