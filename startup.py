@@ -8,9 +8,11 @@ import numpy as numpy
 
 if __name__ == '__main__':
     data_file = './train.csv'
-    dateset = DataSet(data_file, index_col = 'Id', target_col = 'SalePrice')
-    dateset.drop_feature_by_missed_rate()
-    dateset.fix_na()
-    dateset.feature_discrete()
-    gbdt = GBDT(10000, 0.1, 0.3, 5, learn_rate = 0.007)
-    gbdt.fit(dateset)
+    dataset = DataSet(data_file, index_col = 'Id', target_col = 'SalePrice')
+    dataset.drop_feature_by_missed_rate()
+    dataset.fix_na()
+    dataset.feature_discrete(skip_cols = ['Id', 'SalePrice'])
+    dataset.divide_data()
+    dataset.target_trasfer()
+    gbdt = GBDT(4000, 0.1, 0.3, 5, learn_rate = 0.007)
+    gbdt.fit(dataset)

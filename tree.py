@@ -21,8 +21,8 @@ class DTree:
     def splite_feature(self, feature):
         min_E = 1000000
         splite_points = set(feature[:])
-        d1 = 0
-        d2 = 0
+        d1 = 0.
+        d2 = 0.
         sp_return = 0.
         for s_point in splite_points:#iterate for all splite points.
             idx_left = np.argwhere(feature < s_point).flatten()

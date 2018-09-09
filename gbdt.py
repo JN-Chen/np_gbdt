@@ -15,17 +15,17 @@ class GBDT:
 
     def fit(self, dataset):
         data_x, data_y, sample_id, _ = dataset.get_all_sample()#get total samples
-        total_data_count = dataset.get_total_count()
+        total_data_count = dataset.get_train_count()
         total_fea_count = dataset.get_feature_count()
         Fm = [0. for i in range(total_data_count)]#record Fmֵ, m=0,1,2,3,4,5......max_iter
         predict = np.array([0. for i in range(total_data_count)])#get predict buffer
         sample_count = int(total_data_count*self.sample_rate)
         feature_count = int(total_fea_count*self.feature_rate)
-        _, valid_target, valid_id = dataset.get_valid_sample(data_x, data_y)
+        _, valid_target, valid_id = dataset.get_valid_sample()
         #print(valid_data)
         valid_rsme = 10.
         for iter in range(self.max_iter):
-            train_data, sample_target, train_id, feat_id = dataset.get_train_sample(data_x, data_y, sample_count, feature_count)
+            train_data, sample_target, train_id, feat_id = dataset.get_train_sample(sample_count, feature_count)
             res = self.update_res(data_y, Fm)#get residual of all samples
             train_target = res[train_id]#get residual of train samples
             dt = DTree(train_data.T, train_target, feat_id, self.max_depth)
