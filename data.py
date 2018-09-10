@@ -10,21 +10,23 @@ def log_change(arr):
 
 class DataBase(object):
     def __init__(self, train_file, index_col = 'ID', drop_col_list = None):
+        self.train_count = 0
+        self.feat_count = 0
         self.data_df, self.orgin_idx = self.drop_feature(train_file, index_col, drop_col_list)
     def drop_feature(self, train_file, index_col, drop_col_list):#drop drop_duplicates feature and useless feature
-        train_df = pd.read_csv(train_file, index_col=index_col)
-        orgin_idx = train_df.index
-        unique_df = train_df.nunique().reset_index()#get unique value of feature.
+        data_df = pd.read_csv(train_file, index_col=index_col)
+        orgin_idx = data_df.index
+        unique_df = data_df.nunique().reset_index()#get unique value of feature.
         unique_df.columns = ["col_name", "unique_count"]
         constant_df = unique_df[unique_df["unique_count"]==1]#get useless feature which num of value is 1. 
         #the useless feature only have one value
         constant_cols = list(constant_df['col_name'].values)
-        train_df.drop(constant_cols, axis=1, inplace=True)#drop useless feature.
+        data_df.drop(constant_cols, axis=1, inplace=True)#drop useless feature.
         if(drop_col_list != None):
             for drop_col in drop_col_list:
-                train_df.drop(drop_col, axis=1, inplace=True)#drop specify feature
-        train_df = train_df.T.drop_duplicates().T#drop_duplicates feature.
-        return train_df, orgin_idx
+                data_df.drop(drop_col, axis=1, inplace=True)#drop specify feature
+        data_df = data_df.T.drop_duplicates().T#drop_duplicates feature.
+        return data_df, orgin_idx
 
 class DataTransfer(DataBase):
     def __init__(self, train_file, index_col = 'ID', drop_col_list = None):
@@ -70,13 +72,13 @@ class DataTransfer(DataBase):
             feat_transfer.cst_trans(self.data_df[feature])
             self.data_df[feature] = feat_transfer.transfer(self.data_df[feature])
         #list(map(self.transfer_map, features))#fill na with max freq value
-        print(self.data_df.head())
+        #print(self.data_df.head())
 
 class DataSet(DataTransfer):
     def __init__(self, train_file, index_col = 'ID', target_col = 'target',  valid_rate = 0.2,\
      drop_col_list = None):
         DataTransfer.__init__(self, train_file, index_col, drop_col_list)
-        self.train_df = None
+        #self.data_df = None
         self.target_df = None
         self.valid_rate = valid_rate
         self.train_ids = None
@@ -84,11 +86,13 @@ class DataSet(DataTransfer):
         self.target_col = target_col
     def get_train_target(self, data_df, valid_rate, target_col):
         target_df = data_df[target_col]
-        train_df = data_df.drop(target_col, axis=1, inplace=False)
-        return train_df, target_df
+        data_df = data_df.drop(target_col, axis=1, inplace=False)
+        self.train_count = len(target_df.values)
+        self.feat_count = len(data_df.values.T)
+        return data_df, target_df
 
     def divide_data(self):
-        self.train_df, self.target_df = self.get_train_target(self.data_df, self.valid_rate, self.target_col)
+        self.data_df, self.target_df = self.get_train_target(self.data_df, self.valid_rate, self.target_col)
         self.splite_train_valid()
 
     def target_trasfer(self, function = log_change):
@@ -99,19 +103,22 @@ class DataSet(DataTransfer):
         #print(self.target_df)
         #adsfsadfasdfa
     def get_all_sample(self):
-        train_data = self.train_df.values
-        target_data = self.target_df.values
-        data_ids = np.array([i for i in range(self.get_train_count())])
-        feature_ids = np.array([i for i in range(self.get_feature_count())])
-        return train_data, target_data, data_ids, feature_ids
+        data = self.data_df.values
+        target = self.target_df.values
+        data_ids = self.get_sample_ids()
+        feature_ids = self.get_feature_ids()
+        return data, target, data_ids, feature_ids
         
     def get_train_count(self):
-        return len(self.target_df.values)
+        return self.train_count
     def get_feature_count(self):
-        return len(self.train_df.values.T)
-        
+        return self.feat_count
+    def get_sample_ids(self):
+        return np.array([i for i in range(self.get_train_count())])
+    def get_feature_ids(self):
+        return np.array([i for i in range(self.get_feature_count())])
     def splite_train_valid(self):
-        ids = np.array([i for i in range(self.get_train_count())])
+        ids = self.get_sample_ids()
         np.random.shuffle(ids)
         splite_len = int(len(ids) * (1 - self.valid_rate))
         self.train_ids = ids[:splite_len]
@@ -126,7 +133,7 @@ class DataSet(DataTransfer):
             train_id = self.train_ids[:sample]
         else:
             train_id = self.train_ids[:]
-        feature_ids = np.array([i for i in range(self.get_feature_count())])
+        feature_ids = self.get_feature_ids()
         np.random.shuffle(feature_ids)
         if(feat == 0):
             feat_id = feature_ids[:]
@@ -145,7 +152,12 @@ class DataSet(DataTransfer):
         rand_valid_data = data[valid_ids, :]
         rand_valid_target = target[valid_ids]
         return rand_valid_data, rand_valid_target, valid_ids
-
+    def corr(self, feature):
+        s_target = pd.Series(list(self.target_df.values))
+        s_feature = pd.Series(list(self.data_df[feature].values))
+        corr = s_feature.corr(s_target)
+        return corr
+    
 
 if __name__ == "__main__":
     from sys import argv
