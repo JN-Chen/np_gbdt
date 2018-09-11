@@ -10,7 +10,7 @@ def log_change(arr):
 
 class DataBase(object):
     def __init__(self, train_file, index_col = 'ID', drop_col_list = None):
-        self.train_count = 0
+        self.sample_count = 0
         self.feat_count = 0
         self.data_df, self.orgin_idx = self.drop_feature(train_file, index_col, drop_col_list)
     def drop_feature(self, train_file, index_col, drop_col_list):#drop drop_duplicates feature and useless feature
@@ -62,37 +62,38 @@ class DataTransfer(DataBase):
         list(map(self.fillna_map_func, fix_idx.values))#fill na with max freq value
         na_count = self.get_na_count()
         print("na count=%d" % na_count)
-
+    def discrete_map_func(self, feature):
+        if feature in self.skip_cols:
+            return
+        feat_transfer = FeatTransfer()
+        feat_transfer.cst_trans(self.data_df[feature])
+        self.data_df[feature] = feat_transfer.transfer(self.data_df[feature])
     def feature_discrete(self, skip_cols = []):
+        print('feature_discrete')
         features = self.data_df.columns.values
-        for feature in features:
-            if feature in skip_cols:
-                continue
-            feat_transfer = FeatTransfer()
-            feat_transfer.cst_trans(self.data_df[feature])
-            self.data_df[feature] = feat_transfer.transfer(self.data_df[feature])
-        #list(map(self.transfer_map, features))#fill na with max freq value
-        #print(self.data_df.head())
+        self.skip_cols = skip_cols
+        list(map(self.discrete_map_func, features))
+        print('feature_discrete done')
 
 class DataSet(DataTransfer):
     def __init__(self, train_file, index_col = 'ID', target_col = 'target',  valid_rate = 0.2,\
      drop_col_list = None):
         DataTransfer.__init__(self, train_file, index_col, drop_col_list)
-        #self.data_df = None
         self.target_df = None
         self.valid_rate = valid_rate
         self.train_ids = None
         self.valid_ids = None
         self.target_col = target_col
     def get_train_target(self, data_df, valid_rate, target_col):
-        target_df = data_df[target_col]
-        data_df = data_df.drop(target_col, axis=1, inplace=False)
-        self.train_count = len(target_df.values)
-        self.feat_count = len(data_df.values.T)
-        return data_df, target_df
-
+        self.target_df = data_df[target_col]
+        self.data_df = data_df.drop(target_col, axis=1, inplace=False)
+        self.update_count()
+        return self.data_df, self.target_df
+    def update_count(self):
+        self.sample_count = len(self.data_df.values)
+        self.feat_count = len(self.data_df.values.T)
     def divide_data(self):
-        self.data_df, self.target_df = self.get_train_target(self.data_df, self.valid_rate, self.target_col)
+        self.get_train_target(self.data_df, self.valid_rate, self.target_col)
         self.splite_train_valid()
 
     def target_trasfer(self, function = log_change):
@@ -109,12 +110,12 @@ class DataSet(DataTransfer):
         feature_ids = self.get_feature_ids()
         return data, target, data_ids, feature_ids
         
-    def get_train_count(self):
-        return self.train_count
+    def get_sample_count(self):
+        return self.sample_count
     def get_feature_count(self):
         return self.feat_count
     def get_sample_ids(self):
-        return np.array([i for i in range(self.get_train_count())])
+        return np.array([i for i in range(self.get_sample_count())])
     def get_feature_ids(self):
         return np.array([i for i in range(self.get_feature_count())])
     def splite_train_valid(self):
@@ -157,6 +158,17 @@ class DataSet(DataTransfer):
         s_feature = pd.Series(list(self.data_df[feature].values))
         corr = s_feature.corr(s_target)
         return corr
+    def hold_feat_by_corr(self, importance_hold):
+        features = self.data_df.columns
+        for feature in features:
+            value_corr = self.corr(feature)
+            if(value_corr < 0):
+                value_corr = 0. - value_corr
+            if(value_corr < importance_hold):
+                self.data_df.drop(feature, axis=1, inplace=True)#
+                print('drop feature %s' % feature)
+        self.update_count()
+
     
 
 if __name__ == "__main__":

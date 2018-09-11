@@ -15,7 +15,7 @@ class GBDT:
 
     def fit(self, dataset):
         data_x, data_y, sample_id, _ = dataset.get_all_sample()#get total samples
-        total_data_count = dataset.get_train_count()
+        total_data_count = dataset.get_sample_count()
         total_fea_count = dataset.get_feature_count()
         Fm = [0. for i in range(total_data_count)]#record Fmֵ, m=0,1,2,3,4,5......max_iter
         predict = np.array([0. for i in range(total_data_count)])#get predict buffer
