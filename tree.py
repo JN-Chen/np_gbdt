@@ -60,14 +60,15 @@ class DTree:
         #print("l : r = %d : %d", len(left_idx), len(right_idx))
         return left_idx, right_idx
     def construct(self, ret = 0):
+        left_idx, right_idx = self.splite_data()
         if (ret == 1 or self.depth <= 0 or\
-         len(self.data) == 1 or len(self.data.T) == 1 ):#leaf node, return mean of target.
+         len(self.data) == 1 or len(self.data.T) == 1 or\
+         len(left_idx) == 0 and len(right_idx) == 0):#leaf node, return mean of target.
             self.leaf = 1
             self.output = self.target.mean()
             self.clear_mem()
             #print("leafnode output=%f" % self.output)
             return
-        left_idx, right_idx = self.splite_data()
         drop_feature_data = np.delete(np.array(self.data), self.splite_feat_idx, axis = 0)
         drop_feature_ids = np.delete(np.array(self.feat_id), self.splite_feat_idx)
         ret = 0
@@ -79,11 +80,6 @@ class DTree:
         if(len(right_idx) > 0):
             self.rnext = DTree(drop_feature_data[:,right_idx], self.target[right_idx], drop_feature_ids, self.depth - 1)
             self.rnext.construct(ret)
-        if(len(left_idx) == 0 and len(right_idx) == 0):
-            #print()
-            print(self.feature_id)
-            print(self.splite_point)
-            raise RuntimeError("construct panic!")
         self.clear_mem()
     def get_output(self, data, ids, output):
         if(self.leaf == 1):
