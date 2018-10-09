@@ -1,6 +1,7 @@
 from random import sample
 import numpy as np
-from tree import DTree
+from tree import Res_Tree
+from tree import Xgb_Tree
 class GBDT:
     def __init__(self, max_iter = 1000, sample_rate = 0.5, feature_rate = 0.5,max_depth = 10, learn_rate = 0.05):
         self.max_iter = max_iter
@@ -39,7 +40,7 @@ class GBDT:
             train_data, sample_target, train_id, feat_id = dataset.get_train_sample(sample_count, feature_count)
             res = self.update_res(data_y, Fm_sample)#get residual of all samples
             train_target = res[train_id]#get residual of train samples
-            dt = DTree(train_data.T, train_target, feat_id, self.max_depth)
+            dt = Res_Tree(train_data.T, train_target, feat_id, self.max_depth)
             dt.construct()
             dt.get_output(data_x.T, sample_id, sample_predict)#use a single tree to predict all data
             Fm_sample = Fm_sample + sample_predict*step#caculate final output
